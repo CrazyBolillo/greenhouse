@@ -1,5 +1,4 @@
 #include <xc.h>
-#include <math.h>
 #include <stdint.h>
 
 #pragma config DEBUG = 1
@@ -29,21 +28,22 @@ uint16_t temperature = 2025;
 
 void display_number() 
 {
-    uint8_t value = (uint8_t) ((temperature / (uint16_t) pow(10, display_position)) % 10);
-    
     DISPLAY_SELECT |= 0x0F;
-    DISPLAY = led_numbers[value];
     if (display_position == 0) {
+        DISPLAY = led_numbers[(uint8_t) (temperature % 10)];
         DISPLAY_SELECT &= 0xFE;
     }
     else if (display_position == 1) {
+        DISPLAY = led_numbers[(uint8_t) ((temperature / 10) % 10)];
         DISPLAY_SELECT &= 0xFD;
     }
     else if (display_position == 2) {
+        DISPLAY = led_numbers[(uint8_t) ((temperature / 100) % 10)];
         DISPLAY |= 0x80;
         DISPLAY_SELECT &= 0xFB;
     }
     else {
+        DISPLAY = led_numbers[(uint8_t) (temperature / 1000)];
         DISPLAY_SELECT &= 0xF7;
     }
 }
