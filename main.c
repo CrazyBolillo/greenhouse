@@ -20,11 +20,27 @@
 #define DISPLAY PORTC
 #define DISPLAY_SELECT PORTD
 
+
 const uint8_t led_numbers[] = {0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 
     0x7F, 0x67, 0x77};
-
 uint8_t display_position = 0;
+
+const double resolution = 48.8758533;
+uint16_t adc_value = 0;
 uint16_t temperature = 2025;
+
+void read_adc() 
+{
+    adc_value = 0;
+    ADCON0bits.GO_nDONE = 1;
+    while (ADCON0bits.GO_nDONE == 1) {}
+    NOP();
+    adc_value |= ADRESH;
+    adc_value = adc_value << 2;
+    adc_value |= (ADRESL >> 6);
+    
+    temperature = (uint16_t) (adc_value * resolution);
+}
 
 void display_number() 
 {
@@ -70,6 +86,10 @@ void main(void)
 {
     OSCCON = 0x79;
     
+    ADCON0 = 0x9D;
+    ADCON1 = 0x00;
+    ADCON0 |= 0x01;
+    
     PIE1bits.TMR1IE = 1;
     INTCONbits.PEIE = 1;
     INTCONbits.GIE = 1;
@@ -84,7 +104,20 @@ void main(void)
     T1CON = 0xB1;
     while (1)
     {
-        NOP();
+        read_adc();
+        switch (temperature) {
+            case 6000:
+                NOP();
+            case 4500:
+                NOP();
+                break;
+            case 1000:
+                NOP();
+            case 1500:
+                NOP();
+                break;
+        }
+
     }
     
 }
