@@ -20,6 +20,10 @@
 #define DISPLAY PORTC
 #define DISPLAY_SELECT PORTD
 
+#define FAN_1 PORTDbits.RD4
+#define FAN_2 PORTDbits.RD5
+#define HEATER_1 PORTDbits.RD6
+#define HEATER_2 PORTDbits.RD7
 
 const uint8_t led_numbers[] = {0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 
     0x7F, 0x67, 0x77};
@@ -94,7 +98,6 @@ void main(void)
     INTCONbits.PEIE = 1;
     INTCONbits.GIE = 1;
     
-    
     PORTC = 0x00;
     TRISC = 0x00;
     PORTD = 0x00;
@@ -105,19 +108,31 @@ void main(void)
     while (1)
     {
         read_adc();
-        switch (temperature) {
-            case 6000:
-                NOP();
-            case 4500:
-                NOP();
-                break;
-            case 1000:
-                NOP();
-            case 1500:
-                NOP();
-                break;
+        if (temperature >= 6000) {
+            FAN_1 = 1;
+            FAN_2 = 1;
         }
-
+        else if (temperature >= 4500) {
+            FAN_1 = 1;
+            FAN_2 = 0;
+        }
+        else if (temperature < 4500) {
+            FAN_1 = 0;
+            FAN_2 = 0;
+        }
+        
+        if (temperature > 1500) {
+            HEATER_1 = 0;
+            HEATER_2 = 0;
+        }
+        else if (temperature <= 1000) {
+            HEATER_1 = 1;
+            HEATER_2 = 1;
+        }
+        else if (temperature <= 1500) {
+            HEATER_1 = 1;
+            HEATER_2 = 0;
+        }
     }
     
 }
