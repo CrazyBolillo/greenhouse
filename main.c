@@ -20,8 +20,8 @@
 #define DISPLAY PORTC
 #define DISPLAY_SELECT PORTD
 
-#define FAN_1 PORTDbits.RD4
-#define FAN_2 PORTDbits.RD5
+#define FAN_1 PORTDbits.RD4 = PORTAbits.RA0
+#define FAN_2 PORTDbits.RD5 = PORTBbits.RB6
 #define HEATER_1 PORTDbits.RD6
 #define HEATER_2 PORTDbits.RD7
 #define ALARM PORTEbits.RE1
@@ -117,6 +117,7 @@ void main(void)
 {
     OSCCON = 0x79;
     
+    ANSEL = 0x80;
     ADCON0 = 0x9D;
     ADCON1 = 0x00;
     ADCON0 |= 0x01;
@@ -126,6 +127,10 @@ void main(void)
     INTCONbits.PEIE = 1;
     INTCONbits.GIE = 1;
 
+    PORTA = 0x00;
+    TRISA = 0x00;
+    PORTB = 0x00;
+    TRISB = 0x00;
     PORTC = 0x00;
     TRISC = 0x00;
     PORTD = 0x00;
