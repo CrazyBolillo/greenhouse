@@ -21,14 +21,14 @@
 #define DISPLAY_SELECT PORTD
 
 #define FAN_1 PORTDbits.RD4 = PORTAbits.RA0
-#define FAN_2 PORTDbits.RD5 = PORTBbits.RB6
+#define FAN_2 PORTDbits.RD5 = PORTBbits.RB5
 #define HEATER_1 PORTDbits.RD6
 #define HEATER_2 PORTDbits.RD7
 #define ALARM PORTEbits.RE1
 #define WATER PORTBbits.RB3
 
-#define BUZZER_HOT_START 230
-#define BUZZER_COLD_START 15
+#define BUZZER_HOT_START 250
+#define BUZZER_COLD_START 5
 
 #define TMR2_OFF T2CON &= 0xFB
 #define TMR2_ON T2CON |= 0x04; buzzer_on = 1
@@ -37,11 +37,12 @@ const uint8_t led_numbers[] = {0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07,
     0x7F, 0x67, 0x77};
 uint8_t display_position = 0;
 
-const double resolution = 32.258064;
+const double resolution = 48.87585533;
 uint16_t adc_value = 0;
 uint32_t adc_read = 0;
 uint32_t first_temperature = 0;
 uint32_t calc_temperature = 0;
+uint32_t past_temperature = 0;
 uint32_t temperature = 0;
 
 uint16_t water_count = 0;
@@ -84,6 +85,8 @@ void read_temperature() {
     read_adc();
     calc_temperature += (adc_read - first_temperature);
     calc_temperature /= 501;
+    
+    past_temperature = temperature;
     temperature = calc_temperature;
 }
 
@@ -162,6 +165,7 @@ void main(void)
     OSCCON = 0x79;
     
     ANSEL = 0x80;
+    ANSELH = 0x00;
     ADCON0 = 0x9D;
     ADCON1 = 0x00;
     ADCON0 |= 0x01;
@@ -205,9 +209,15 @@ void main(void)
         else {
             FAN_1 = 0;
         }
-        if ((water_count == 0) && (temperature <= 3050) && (temperature >= 2950)) {
-            WATER = 1;    
-            INTCON |= 0x20;
+        if (water_count == 0) {
+            if ((past_temperature < 3000) && (temperature >= 3000)) {
+                WATER = 1;    
+                INTCON |= 0x20; 
+            }
+            else if ((past_temperature > 3000) && (temperature <= 3000)) {
+                WATER = 1;    
+                INTCON |= 0x20; 
+            }
         }
         if (temperature <= 1500) {
             HEATER_1 = 1;
