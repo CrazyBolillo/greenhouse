@@ -38,8 +38,9 @@ uint8_t display_position = 0;
 
 const double resolution = 32.258064;
 uint16_t adc_value = 0;
+uint16_t adc_read = 0;
+uint16_t first_temperature = 0;
 uint16_t temperature = 0;
-
 
 /*
  * Variables in charge of controlling buzzer behavior. 
@@ -62,7 +63,24 @@ void read_adc()
     adc_value = adc_value << 2;
     adc_value |= (ADRESL >> 6);
     
-    temperature = (uint16_t) (adc_value * resolution);
+    adc_read = (uint16_t) (adc_value * resolution);
+}
+
+void read_temperature() {
+    read_adc();
+    first_temperature = adc_read;
+    temperature += first_temperature;
+    
+    for (uint8_t sample = 0; sample != 5; sample++) {
+        read_adc();
+        temperature += adc_read;
+        __delay_ms(20);
+    }
+    
+    read_adc();
+    temperature += adc_read;
+    temperature += (adc_read - first_temperature);
+    temperature /= 6;
 }
 
 void display_number() 
@@ -151,12 +169,10 @@ void main(void)
     TRISE = 0x0C;
     T2CON = 0x79;
     T1CON = 0xB1;
-            
+           
     while (1)
     {
-        read_adc();
-        __delay_ms(350);
- 
+        read_temperature(); 
         if (temperature >= 4500) {
             FAN_1 = 1;
             if (temperature >= 6000) {
