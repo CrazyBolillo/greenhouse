@@ -76,15 +76,14 @@ void read_temperature() {
     first_temperature = adc_read;
     calc_temperature += first_temperature;
     
-    for (uint8_t sample = 0; sample != 99; sample++) {
+    for (uint16_t sample = 0; sample != 300; sample++) {
         read_adc();
         calc_temperature += adc_read;
-        __delay_ms(8);
     }
     
     read_adc();
     calc_temperature += (adc_read - first_temperature);
-    calc_temperature /= 100;
+    calc_temperature /= 501;
     temperature = calc_temperature;
 }
 
