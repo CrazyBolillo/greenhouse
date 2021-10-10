@@ -25,7 +25,7 @@
 #define HEATER_1 PORTDbits.RD6
 #define HEATER_2 PORTDbits.RD7
 #define ALARM PORTEbits.RE1
-#define WATER PORTAbits.RA6
+#define WATER PORTBbits.RB3
 
 #define BUZZER_HOT_START 230
 #define BUZZER_COLD_START 15
@@ -146,9 +146,9 @@ void __interrupt() handle_int(void)
         }
     }
     
-    if (INTCONbits.T0IF == 1) {
+    if ((INTCONbits.TMR0IE == 1) && (INTCONbits.T0IF == 1)) {
         water_count++;
-        if (water_count == 7813) {
+        if (water_count == 1875) {
             INTCON &= 0xDF;
             water_count = 0;
             WATER = 0;
@@ -205,7 +205,7 @@ void main(void)
         else {
             FAN_1 = 0;
         }
-        if ((water_count == 0) && (temperature <= 3010) && (temperature >= 2990)) {
+        if ((water_count == 0) && (temperature <= 3050) && (temperature >= 2950)) {
             WATER = 1;    
             INTCON |= 0x20;
         }
