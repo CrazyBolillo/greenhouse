@@ -40,6 +40,7 @@ const double resolution = 32.258064;
 uint16_t adc_value = 0;
 uint16_t adc_read = 0;
 uint16_t first_temperature = 0;
+uint16_t calc_temperature = 0;
 uint16_t temperature = 0;
 
 /*
@@ -67,20 +68,21 @@ void read_adc()
 }
 
 void read_temperature() {
+    calc_temperature = 0;
     read_adc();
     first_temperature = adc_read;
-    temperature += first_temperature;
+    calc_temperature += first_temperature;
     
     for (uint8_t sample = 0; sample != 5; sample++) {
         read_adc();
-        temperature += adc_read;
+        calc_temperature += adc_read;
         __delay_ms(20);
     }
     
     read_adc();
-    temperature += adc_read;
-    temperature += (adc_read - first_temperature);
-    temperature /= 6;
+    calc_temperature += (adc_read - first_temperature);
+    calc_temperature /= 6;
+    temperature = calc_temperature;
 }
 
 void display_number() 
@@ -170,6 +172,8 @@ void main(void)
     T2CON = 0x79;
     T1CON = 0xB1;
            
+    // Wait for circuit to stabilize
+    __delay_ms(10);
     while (1)
     {
         read_temperature(); 
