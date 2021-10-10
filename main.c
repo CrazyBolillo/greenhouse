@@ -25,6 +25,7 @@
 #define HEATER_1 PORTDbits.RD6
 #define HEATER_2 PORTDbits.RD7
 #define ALARM PORTEbits.RE1
+#define WATER PORTAbits.RA6
 
 #define BUZZER_HOT_START 230
 #define BUZZER_COLD_START 15
@@ -42,6 +43,8 @@ uint32_t adc_read = 0;
 uint32_t first_temperature = 0;
 uint32_t calc_temperature = 0;
 uint32_t temperature = 0;
+
+uint16_t water_count = 0;
 
 /*
  * Variables in charge of controlling buzzer behavior. 
@@ -143,6 +146,16 @@ void __interrupt() handle_int(void)
             TMR2_ON; 
         }
     }
+    
+    if (INTCONbits.T0IF == 1) {
+        water_count++;
+        if (water_count == 7813) {
+            INTCON &= 0xDF;
+            water_count = 0;
+            WATER = 0;
+        }
+        INTCONbits.T0IF = 0;
+    }
 }
 
 void main(void) 
@@ -169,6 +182,7 @@ void main(void)
     TRISD = 0x00;
     PORTE = 0x00;
     TRISE = 0x0C;
+    OPTION_REG = 0xD7;
     T2CON = 0x79;
 
     __delay_us(100);
@@ -191,6 +205,10 @@ void main(void)
         }
         else {
             FAN_1 = 0;
+        }
+        if ((water_count == 0) && (temperature <= 3010) && (temperature >= 2990)) {
+            WATER = 1;    
+            INTCON |= 0x20;
         }
         if (temperature <= 1500) {
             HEATER_1 = 1;
