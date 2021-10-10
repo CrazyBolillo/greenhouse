@@ -40,10 +40,17 @@ const double resolution = 32.258064;
 uint16_t adc_value = 0;
 uint16_t temperature = 0;
 
-// 0 is for buzzing when HOT, 1 is for buzzing when cold.
+
+/*
+ * Variables in charge of controlling buzzer behavior. 
+ * - buzzer_on: Whether buzzer should be on or off. 
+ * - buzzer_type: Used to set PR2 and therefore change frequency based on
+ * whether the alarm is being used for heat or cold.
+ * - buzzer_state: State of the pin used to drive the buzzer
+ */
+uint8_t buzzer_on = 0;
 uint8_t buzzer_type = 0;
 uint8_t buzz_state = 0;
-uint16_t buzz_count = 0;
 
 void read_adc() 
 {
@@ -99,17 +106,22 @@ void __interrupt() handle_int(void)
     
     if (PIR1bits.TMR2IF == 1) {
         TMR2_OFF;
-        buzz_state = !buzz_state;
-        ALARM = buzz_state;
-        if (buzzer_type == 0) {
-            PR2 = BUZZER_HOT_START;
+        PIR1bits.TMR2IF = 0;
+        if (buzzer_on == 0) {
+            buzz_state = 0;
+            ALARM = buzz_state;
         }
         else {
-            PR2 = BUZZER_COLD_START;
+           buzz_state = !buzz_state;
+            ALARM = buzz_state;
+            if (buzzer_type == 0) {
+                PR2 = BUZZER_HOT_START;
+            }
+            else {
+                PR2 = BUZZER_COLD_START;
+            }
+            TMR2_ON; 
         }
-        
-        PIR1bits.TMR2IF = 0;
-        TMR2_ON;
     }
 }
 
@@ -154,7 +166,7 @@ void main(void)
             }
             if (temperature < 6000) {
                 FAN_2 = 0;
-                TMR2_OFF;
+                buzzer_on = 0;
             }
         }
         else {
@@ -175,7 +187,7 @@ void main(void)
             HEATER_2 = 0;
         }
         if (temperature > 1000 && temperature < 1600) {
-            TMR2_OFF;
+            buzzer_on = 0;
         }   
     }
     
