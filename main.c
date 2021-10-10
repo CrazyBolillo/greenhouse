@@ -30,7 +30,7 @@
 #define BUZZER_COLD_START 15
 
 #define TMR2_OFF T2CON &= 0xFB
-#define TMR2_ON T2CON |= 0x04
+#define TMR2_ON T2CON |= 0x04; buzzer_on = 1
 
 const uint8_t led_numbers[] = {0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 
     0x7F, 0x67, 0x77};
@@ -38,10 +38,10 @@ uint8_t display_position = 0;
 
 const double resolution = 32.258064;
 uint16_t adc_value = 0;
-uint16_t adc_read = 0;
-uint16_t first_temperature = 0;
-uint16_t calc_temperature = 0;
-uint16_t temperature = 0;
+uint32_t adc_read = 0;
+uint32_t first_temperature = 0;
+uint32_t calc_temperature = 0;
+uint32_t temperature = 0;
 
 /*
  * Variables in charge of controlling buzzer behavior. 
@@ -73,7 +73,7 @@ void read_temperature() {
     first_temperature = adc_read;
     calc_temperature += first_temperature;
     
-    for (uint8_t sample = 0; sample != 5; sample++) {
+    for (uint8_t sample = 0; sample != 19; sample++) {
         read_adc();
         calc_temperature += adc_read;
         __delay_ms(20);
@@ -81,7 +81,7 @@ void read_temperature() {
     
     read_adc();
     calc_temperature += (adc_read - first_temperature);
-    calc_temperature /= 6;
+    calc_temperature /= 20;
     temperature = calc_temperature;
 }
 
@@ -170,10 +170,10 @@ void main(void)
     PORTE = 0x00;
     TRISE = 0x0C;
     T2CON = 0x79;
+
+    __delay_us(100);
+    read_temperature();
     T1CON = 0xB1;
-           
-    // Wait for circuit to stabilize
-    __delay_ms(10);
     while (1)
     {
         read_temperature(); 
