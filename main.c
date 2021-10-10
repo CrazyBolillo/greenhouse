@@ -84,7 +84,7 @@ void read_temperature() {
     
     read_adc();
     calc_temperature += (adc_read - first_temperature);
-    calc_temperature /= 501;
+    calc_temperature /= 301;
     
     past_temperature = temperature;
     temperature = calc_temperature;
